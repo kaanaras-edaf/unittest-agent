@@ -1,0 +1,236 @@
+{
+  "version": "1.0",
+  "description": "Test generation rules and patterns for AL extensions",
+  
+  "testNaming": {
+    "prefix": "Test",
+    "suffix": "",
+    "includeObjectId": true,
+    "camelCase": true,
+    "maxLength": 100,
+    "replaceSpaces": true,
+    "removeSpecialChars": true
+  },
+  
+  "coverage": {
+    "minimumProcedures": 0.8,
+    "includePrivateMethods": false,
+    "testEvents": true,
+    "testFlowfields": true,
+    "testIntegrationPoints": true,
+    "generateNegativeTests": true,
+    "includePerformanceTests": false,
+    "testErrorHandling": true
+  },
+  
+  "aiPrompt": {
+    "temperature": 0.3,
+    "includeComments": true,
+    "generateDocumentation": true,
+    "focusOnBusinessLogic": true,
+    "includeTestData": true,
+    "explainTestScenarios": true,
+    "useBusinessCentralBestPractices": true
+  },
+  
+  "outputFormat": {
+    "indentation": "    ",
+    "lineEndings": "crlf",
+    "includeFileHeader": true,
+    "includeGenerationTimestamp": true,
+    "includeSourceFileReference": true,
+    "groupTestsByCategory": true
+  },
+  
+  "alSpecific": {
+    "testFramework": {
+      "useTestAttribute": true,
+      "includeSetupTeardown": true,
+      "useAssertLibrary": true,
+      "includeTestPermissions": true,
+      "subtypeTest": true
+    },
+    
+    "objectTypes": {
+      "table": {
+        "testDataInsertion": true,
+        "testFieldValidation": true,
+        "testTriggers": true,
+        "testRelationships": true
+      },
+      "tableextension": {
+        "testNewFields": true,
+        "testFlowfields": true,
+        "testModifiedTriggers": true
+      },
+      "page": {
+        "testActions": true,
+        "testFieldVisibility": true,
+        "testValidation": true
+      },
+      "pageextension": {
+        "testNewActions": true,
+        "testFieldModifications": true,
+        "testLayoutChanges": false
+      },
+      "codeunit": {
+        "testPublicProcedures": true,
+        "testEventPublishers": true,
+        "testEventSubscribers": true,
+        "testErrorHandling": true
+      },
+      "report": {
+        "testDataProcessing": true,
+        "testFilters": true,
+        "testOutput": false
+      }
+    },
+    
+    "events": {
+      "testPublishers": true,
+      "testSubscribers": true,
+      "testEventChains": true,
+      "mockEventData": true,
+      "validateEventParameters": true
+    },
+    
+    "flowfields": {
+      "testCalculations": true,
+      "testFilters": true,
+      "testPerformance": true,
+      "validateSourceData": true,
+      "testEdgeCases": true
+    }
+  },
+  
+  "testCategories": {
+    "unitTests": {
+      "enabled": true,
+      "prefix": "Unit",
+      "focusOn": ["procedures", "calculations", "validation"]
+    },
+    "integrationTests": {
+      "enabled": true,
+      "prefix": "Integration",
+      "focusOn": ["events", "crossModule", "workflows"]
+    },
+    "performanceTests": {
+      "enabled": false,
+      "prefix": "Performance",
+      "focusOn": ["flowfields", "largeDatasets", "complexCalculations"]
+    },
+    "securityTests": {
+      "enabled": false,
+      "prefix": "Security",
+      "focusOn": ["permissions", "dataAccess", "userRights"]
+    }
+  },
+  
+  "testData": {
+    "generateSampleData": true,
+    "useRealisticValues": true,
+    "includeEdgeCases": true,
+    "cleanupAfterTests": true,
+    "isolateTestData": true,
+    "useMockRecords": true
+  },
+  
+  "documentation": {
+    "includeTestDescription": true,
+    "documentTestScenarios": true,
+    "includeExpectedResults": true,
+    "addTroubleshootingNotes": false,
+    "linkToSourceDocumentation": true
+  },
+  
+  "validation": {
+    "checkALSyntax": true,
+    "validateTestLogic": true,
+    "ensureTestIsolation": true,
+    "verifyAssertions": true,
+    "checkNamingConventions": true
+  },
+  
+  "patterns": {
+    "setupPatterns": {
+      "createTestRecords": "CreateTest{ObjectName}",
+      "initializeData": "Initialize{TestName}Data",
+      "setupMocks": "Setup{TestName}Mocks"
+    },
+    
+    "testPatterns": {
+      "positiveTest": "Test{FunctionName}Success",
+      "negativeTest": "Test{FunctionName}Error",
+      "edgeCase": "Test{FunctionName}EdgeCase",
+      "integration": "Test{FunctionName}Integration"
+    },
+    
+    "teardownPatterns": {
+      "cleanupData": "Cleanup{TestName}Data",
+      "resetMocks": "Reset{TestName}Mocks",
+      "validateCleanup": "Validate{TestName}Cleanup"
+    }
+  },
+  
+  "businessCentral": {
+    "version": "Latest",
+    "compatibilityLevel": "20.0",
+    "useStandardLibraries": true,
+    "followMicrosoftGuidelines": true,
+    "includePermissionSets": true,
+    "respectDataClassification": true
+  },
+  
+  "qualityGates": {
+    "minimumTestCoverage": 80,
+    "maximumTestDuration": 30,
+    "requireTestDocumentation": true,
+    "enforceNamingConventions": true,
+    "preventDataLeakage": true
+  },
+  
+  "integrationPoints": {
+    "crossModuleEvents": {
+      "testEventChains": true,
+      "validateEventData": true,
+      "testEventOrdering": true
+    },
+    
+    "sharedTables": {
+      "testDataConsistency": true,
+      "validateRelationships": true,
+      "testConcurrentAccess": false
+    },
+    
+    "commonProcedures": {
+      "testReusability": true,
+      "validateParameters": true,
+      "testErrorPropagation": true
+    }
+  },
+  
+  "exclusions": {
+    "skipPatterns": [
+      "**/backup/**",
+      "**/deprecated/**",
+      "**/.git/**",
+      "**/node_modules/**"
+    ],
+    
+    "skipObjectTypes": [],
+    
+    "skipProcedures": [
+      "OnRun",
+      "OnInstallAppPerCompany",
+      "OnInstallAppPerDatabase"
+    ]
+  },
+  
+  "advanced": {
+    "parallelGeneration": true,
+    "cacheResponses": true,
+    "incrementalGeneration": true,
+    "smartRetries": true,
+    "optimizePrompts": true
+  }
+}

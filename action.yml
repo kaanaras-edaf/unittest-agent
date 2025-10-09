@@ -1,0 +1,103 @@
+name: "AL Unit Test Generator 🧪"
+description: "AI-powered unit test generator for Business Central AL extensions"
+author: "Kaan"
+
+inputs:
+  OPENAI_API_KEY:
+    description: "OpenAI API Key for test generation"
+    required: false
+  ANTHROPIC_API_KEY:
+    description: "Anthropic API Key for test generation"
+    required: false
+  GITHUB_TOKEN:
+    description: "GitHub token for repository access"
+    required: true
+  MODEL_STRING:
+    description: "Model name to use for test generation (e.g., openai:gpt-4, anthropic:claude-3-sonnet)"
+    required: false
+    default: "openai:gpt-4"
+  DOCS_PATH:
+    description: "Glob pattern for documentation files (e.g., './*/md/*.md,./md/*.md')"
+    required: false
+    default: "./*/md/*.md,./md/*.md"
+  CODE_PATH:
+    description: "Glob pattern for AL code files (e.g., './*/*.al')"
+    required: false
+    default: "./**/*.al"
+  OUTPUT_PATH:
+    description: "Directory where generated tests will be placed"
+    required: false
+    default: "./tests"
+  TEST_LANGUAGE:
+    description: "Programming language for generated tests (AL, JavaScript, etc.)"
+    required: false
+    default: "AL"
+  MAX_TOKENS:
+    description: "Maximum tokens for LLM responses"
+    required: false
+    default: "4000"
+  CHANGED_FILES_ONLY:
+    description: "Only generate tests for files changed in PR"
+    required: false
+    default: "true"
+  DEBUG:
+    description: "Enable debug logging"
+    required: false
+    default: "false"
+
+outputs:
+  tests_generated:
+    description: "Number of test files generated"
+  tests_path:
+    description: "Path where tests were generated"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        
+    - name: Install dependencies
+      shell: bash
+      run: |
+        npm install --global al-test-generator
+        
+    - name: Generate AL Unit Tests 🧪
+      shell: bash
+      run: |
+        cmd_args="al-test-generator generate"
+        
+        # Required inputs
+        cmd_args="$cmd_args --model=${{ inputs.MODEL_STRING }}"
+        cmd_args="$cmd_args --docs-path='${{ inputs.DOCS_PATH }}'"
+        cmd_args="$cmd_args --code-path='${{ inputs.CODE_PATH }}'"
+        cmd_args="$cmd_args --output-path='${{ inputs.OUTPUT_PATH }}'"
+        cmd_args="$cmd_args --test-language=${{ inputs.TEST_LANGUAGE }}"
+        cmd_args="$cmd_args --max-tokens=${{ inputs.MAX_TOKENS }}"
+        
+        # Optional flags
+        if [ "${{ inputs.CHANGED_FILES_ONLY }}" = "true" ]; then
+          cmd_args="$cmd_args --changed-files-only"
+        fi
+        
+        if [ "${{ inputs.DEBUG }}" = "true" ]; then
+          cmd_args="$cmd_args --debug"
+        fi
+        
+        echo "Executing: $cmd_args"
+        eval $cmd_args
+      env:
+        OPENAI_API_KEY: ${{ inputs.OPENAI_API_KEY }}
+        ANTHROPIC_API_KEY: ${{ inputs.ANTHROPIC_API_KEY }}
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        GITHUB_SHA: ${{ github.sha }}
+        GITHUB_BASE_REF: ${{ github.base_ref }}
+        GITHUB_HEAD_REF: ${{ github.head_ref }}
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        
+branding:
+  icon: "check-circle"
+  color: "green"

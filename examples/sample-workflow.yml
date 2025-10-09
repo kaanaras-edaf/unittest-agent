@@ -1,0 +1,188 @@
+name: Example AL Project Workflow
+
+# This is an example workflow for integrating AL Test Generator 
+# into an existing Business Central AL project
+
+on:
+  push:
+    branches: [ main, feature/*, release/* ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  # Configure your AL project settings here
+  AL_PROJECT_PATH: .
+  TEST_OUTPUT_PATH: ./tests
+  
+jobs:
+  test-generation-and-validation:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Analyze changed files
+        id: file-analysis
+        run: |
+          # Determine if this is a PR or push
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            # For push events, compare with previous commit
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+          
+          echo "base_sha=${BASE_SHA}" >> $GITHUB_OUTPUT
+          echo "head_sha=${HEAD_SHA}" >> $GITHUB_OUTPUT
+          
+          # Check for AL file changes
+          git diff --name-only ${BASE_SHA} ${HEAD_SHA} | grep -E '\.(al)$' > changed_al_files.txt || true
+          
+          # Check for documentation changes
+          git diff --name-only ${BASE_SHA} ${HEAD_SHA} | grep -E '\.md$' > changed_md_files.txt || true
+          
+          if [ -s changed_al_files.txt ] || [ -s changed_md_files.txt ]; then
+            echo "should_generate_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_generate_tests=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Setup development environment
+        if: steps.file-analysis.outputs.should_generate_tests == 'true'
+        run: |
+          # Setup AL development environment
+          # This would typically include AL Language extension setup
+          echo "Setting up AL development environment..."
+          
+      - name: Generate AI-powered tests
+        if: steps.file-analysis.outputs.should_generate_tests == 'true'
+        uses: ./  # Use local action for testing, replace with published action
+        with:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODEL_STRING: "openai:gpt-4"
+          DOCS_PATH: "./SalesAnalysis/md/*.md,./InventoryTracker/md/*.md,./CustomerEngagement/md/*.md,./md/*.md"
+          CODE_PATH: "./**/*.al"
+          OUTPUT_PATH: ${{ env.TEST_OUTPUT_PATH }}
+          TEST_LANGUAGE: "AL"
+          MAX_TOKENS: "4000"
+          CHANGED_FILES_ONLY: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+          DEBUG: "false"
+          
+      - name: Validate generated tests
+        if: steps.file-analysis.outputs.should_generate_tests == 'true'
+        run: |
+          if [ -d "${{ env.TEST_OUTPUT_PATH }}" ]; then
+            echo "✅ Test generation completed successfully"
+            
+            # Count generated files
+            test_files=$(find ${{ env.TEST_OUTPUT_PATH }} -name "*.al" | wc -l)
+            echo "📊 Generated ${test_files} test files"
+            
+            # Basic syntax validation (if AL compiler is available)
+            # alc.exe compile ${{ env.TEST_OUTPUT_PATH }}
+            
+            echo "Generated test files:"
+            find ${{ env.TEST_OUTPUT_PATH }} -name "*.al" -exec echo "  - {}" \;
+          else
+            echo "❌ Test generation failed - no output directory found"
+            exit 1
+          fi
+          
+      - name: Archive test artifacts
+        if: steps.file-analysis.outputs.should_generate_tests == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-al-tests-${{ github.run_number }}
+          path: |
+            ${{ env.TEST_OUTPUT_PATH }}/
+            changed_al_files.txt
+            changed_md_files.txt
+          retention-days: 30
+          
+      - name: Post PR comment
+        if: github.event_name == 'pull_request' && steps.file-analysis.outputs.should_generate_tests == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let comment = '## 🧪 AL Test Generation Report\n\n';
+            
+            // Read changed files
+            try {
+              const changedAL = fs.readFileSync('changed_al_files.txt', 'utf8').trim();
+              if (changedAL) {
+                comment += '### Changed AL Files:\n';
+                changedAL.split('\n').forEach(file => {
+                  comment += `- \`${file}\`\n`;
+                });
+                comment += '\n';
+              }
+            } catch (e) {}
+            
+            // Read test summary
+            try {
+              const summaryPath = path.join('${{ env.TEST_OUTPUT_PATH }}', 'TEST_SUMMARY.md');
+              if (fs.existsSync(summaryPath)) {
+                const summary = fs.readFileSync(summaryPath, 'utf8');
+                comment += summary;
+              }
+            } catch (e) {
+              comment += '⚠️ Could not read test summary\n';
+            }
+            
+            comment += '\n---\n';
+            comment += '*Automated test generation powered by AI 🤖*';
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+            
+  # Optional: Run the generated tests if AL test runner is available
+  run-generated-tests:
+    needs: test-generation-and-validation
+    runs-on: windows-latest  # AL development typically requires Windows
+    if: false  # Disabled by default - enable when AL test runner is configured
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Download generated tests
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-al-tests-${{ github.run_number }}
+          path: ./tests/
+          
+      - name: Setup AL Test Environment
+        run: |
+          # Install AL Language Extension
+          # Setup Business Central test framework
+          # Configure test environment
+          echo "Setting up AL test environment..."
+          
+      - name: Execute AL Tests
+        run: |
+          # Run AL tests using appropriate test runner
+          # Example: AL Test Runner, VSCode AL extension, etc.
+          echo "Executing generated AL tests..."
+          
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: al-test-results-${{ github.run_number }}
+          path: |
+            ./TestResults/
+            ./coverage/

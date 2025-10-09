@@ -1,0 +1,78 @@
+name: AL Test Generation and Execution
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  generate-and-run-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for better PR analysis
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Generate AL Unit Tests
+        uses: your-username/al-test-generator@v1
+        with:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODEL_STRING: "openai:gpt-4"
+          DOCS_PATH: "./*/md/*.md,./md/*.md"
+          CODE_PATH: "./**/*.al"
+          OUTPUT_PATH: "./tests"
+          CHANGED_FILES_ONLY: "true"
+          DEBUG: "false"
+          
+      - name: Setup Business Central Test Framework
+        run: |
+          # Install AL Language Extension dependencies
+          npm install -g @microsoft/al-test-runner
+          
+      - name: Run AL Tests
+        run: |
+          # Run the generated tests using AL test framework
+          al-test-runner --testFolder ./tests
+          
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            ./tests/
+            ./TestResults/
+            
+      - name: Comment PR with Test Summary
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            try {
+              const summaryPath = path.join('./tests', 'TEST_SUMMARY.md');
+              if (fs.existsSync(summaryPath)) {
+                const summary = fs.readFileSync(summaryPath, 'utf8');
+                
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `## 🧪 AI Generated Test Summary\n\n${summary}`
+                });
+              }
+            } catch (error) {
+              console.log('Could not post test summary:', error);
+            }

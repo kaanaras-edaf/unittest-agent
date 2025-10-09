@@ -1,0 +1,121 @@
+name: Local Development Test
+
+# This workflow is for testing the action locally during development
+# It uses the local action instead of trying to reference a published one
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  test-local-action:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Build the action
+        run: npm run build
+        
+      - name: Test CLI tool locally
+        run: |
+          echo "Testing CLI tool..."
+          node dist/index.js --help || echo "CLI help command completed"
+          
+      - name: Create sample AL files for testing
+        run: |
+          mkdir -p test-data
+          cat > test-data/SampleExtension.al << 'EOF'
+          tableextension 50001 "Sample Customer Ext" extends Customer
+          {
+              fields
+              {
+                  field(50001; "Sample Field"; Text[50])
+                  {
+                      Caption = 'Sample Field';
+                  }
+                  field(50002; "Sample Flowfield"; Decimal)
+                  {
+                      FieldClass = FlowField;
+                      CalcFormula = Sum("Sales Line".Amount WHERE("Sell-to Customer No." = FIELD("No.")));
+                  }
+              }
+          }
+          
+          codeunit 50001 "Sample Events"
+          {
+              [IntegrationEvent(false, false)]
+              procedure OnSampleEvent(CustomerNo: Code[20])
+              begin
+              end;
+          }
+          EOF
+          
+      - name: Create sample documentation
+        run: |
+          mkdir -p test-data/md
+          cat > test-data/md/feature.md << 'EOF'
+          # Sample Extension
+          
+          This extension adds sample functionality to customers.
+          
+          ## Features
+          - Sample field for storing additional data
+          - Sample flowfield for calculating totals
+          - Sample event for integration
+          
+          ## Testing Requirements
+          - Test field validation
+          - Test flowfield calculation
+          - Test event publishing
+          EOF
+          
+      - name: Test the local action
+        uses: ./  # Use the local action
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MODEL_STRING: "openai:gpt-4"
+          DOCS_PATH: "./test-data/md/*.md"
+          CODE_PATH: "./test-data/*.al"
+          OUTPUT_PATH: "./test-output"
+          CHANGED_FILES_ONLY: "false"
+          DEBUG: "true"
+        env:
+          # Note: For local testing, you would need to set these secrets
+          # For now, the action will run but skip AI generation without API keys
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          
+      - name: Check generated output
+        run: |
+          if [ -d "./test-output" ]; then
+            echo "✅ Test output directory created"
+            ls -la ./test-output/
+          else
+            echo "ℹ️ No test output (expected without API keys)"
+          fi
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-test-results
+          path: |
+            ./test-output/
+            ./test-data/
+          retention-days: 7

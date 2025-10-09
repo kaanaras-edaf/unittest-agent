@@ -1,0 +1,47 @@
+# Example workflow for using UnitTest-Agent in your AL project
+name: Generate and Run Tests
+
+on:
+  push:
+    branches: [ main, feature/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-generation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Generate tests using the UnitTest-Agent
+      - name: Generate Unit Tests with AI Agent
+        uses: your-username/unittest-agent@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          docs-path: './*/md/*.md,./md/*.md'
+          code-path: './*/*.al'
+          output-path: './tests'
+          model: 'gpt-4o'  # Optional: specify model
+
+      # Commit generated tests back to the repository
+      - name: Commit generated tests
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add tests/
+          git diff --staged --quiet || git commit -m "Auto-generated unit tests"
+          git push
+        if: github.event_name == 'push'
+
+      # Run the generated tests (if you have AL test runner setup)
+      - name: Run AL Tests
+        run: |
+          # Add your AL test execution commands here
+          # This depends on your AL test framework setup
+          echo "Running generated tests..."
