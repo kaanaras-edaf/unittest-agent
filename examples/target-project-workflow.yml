@@ -1,3 +1,6 @@
+# Example workflow for AL projects using UnitTest-Agent
+# Copy this file to .github/workflows/ in your AL project repository
+
 name: AL Test Generation and Execution
 
 on:
@@ -23,7 +26,7 @@ jobs:
           cache: 'npm'
           
       - name: Generate AL Unit Tests
-        uses: your-username/al-test-generator@v1
+        uses: kaanaras-edaf/unittest-agent@v1
         with:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
