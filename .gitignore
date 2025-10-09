@@ -1,7 +1,7 @@
 # AL Unit Test Generator
 
 node_modules/
-dist/
+# dist/ - Keep dist for GitHub Actions distribution
 *.log
 npm-debug.log*
 yarn-debug.log*
