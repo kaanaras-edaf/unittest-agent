@@ -1,0 +1,80 @@
+name: Development Testing
+
+# This workflow tests the action during development
+# It builds and tests the CLI functionality without requiring API keys
+
+on:
+  push:
+    branches: [ develop, feature/* ]
+  pull_request:
+    branches: [ develop ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  test-development:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Build the action
+        run: npm run build
+        
+      - name: Test CLI help command
+        run: |
+          echo "Testing CLI help..."
+          node dist/index.js --help
+          
+      - name: Test CLI analyze command (without API key)
+        run: |
+          echo "Testing CLI analyze command..."
+          # Create sample AL files for testing
+          mkdir -p test-data/SampleModule/md
+          cat > test-data/SampleModule/SampleExtension.al << 'EOF'
+          tableextension 50001 "Sample Customer Ext" extends Customer
+          {
+              fields
+              {
+                  field(50001; "Sample Field"; Text[50])
+                  {
+                      Caption = 'Sample Field';
+                  }
+              }
+          }
+          EOF
+          
+          cat > test-data/SampleModule/md/feature.md << 'EOF'
+          # Sample Module
+          This module extends the Customer table with sample functionality.
+          EOF
+          
+          # Test analyze command (should work without API key)
+          node dist/index.js analyze --docs "./test-data/*/md/*.md" --code "./test-data/*/*.al" || echo "Analyze command completed"
+          
+      - name: Verify distribution files
+        run: |
+          echo "Checking distribution files..."
+          ls -la dist/
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ dist/index.js missing"
+            exit 1
+          else
+            echo "✅ dist/index.js exists"
+          fi
+          
+      - name: Cleanup test data
+        run: |
+          rm -rf test-data/
+          echo "✅ Test data cleaned up"

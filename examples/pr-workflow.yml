@@ -1,3 +1,6 @@
+# Example PR workflow for AL projects using UnitTest-Agent
+# Copy this file to .github/workflows/ in your AL project repository
+
 name: PR Test Generation
 
 on:
@@ -37,7 +40,7 @@ jobs:
           
       - name: Generate Tests for Changed Files
         if: steps.changes.outputs.has_al_changes == 'true'
-        uses: your-username/al-test-generator@v1
+        uses: kaanaras-edaf/unittest-agent@v1
         with:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
