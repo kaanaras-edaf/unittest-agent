@@ -43,11 +43,17 @@ coverage/
 tests/
 test-results/
 TestResults/
+test-project/
 
 # AL specific
 .alpackages/
 .snapshots/
 *.app
+
+# Development/testing artifacts
+.env.example
+temp/
+tmp/
 *.bak
 
 # Temporary files
