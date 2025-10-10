@@ -61,10 +61,19 @@ program
         const results = await generator.generateTests(filesToAnalyze);
         logger.info(`✅ Generated ${results.testsGenerated} test files`);
         logger.info(`📁 Tests saved to: ${results.outputPath}`);
-        // Set outputs for GitHub Actions
+        // Set outputs for GitHub Actions using new format
         if (process.env.GITHUB_ACTIONS) {
-            console.log(`::set-output name=tests_generated::${results.testsGenerated}`);
-            console.log(`::set-output name=tests_path::${results.outputPath}`);
+            const fs = require('fs');
+            const outputFile = process.env.GITHUB_OUTPUT;
+            if (outputFile) {
+                fs.appendFileSync(outputFile, `tests_generated=${results.testsGenerated}\n`);
+                fs.appendFileSync(outputFile, `tests_path=${results.outputPath}\n`);
+            }
+            else {
+                // Fallback for older runners
+                console.log(`::set-output name=tests_generated::${results.testsGenerated}`);
+                console.log(`::set-output name=tests_path::${results.outputPath}`);
+            }
         }
     }
     catch (error) {

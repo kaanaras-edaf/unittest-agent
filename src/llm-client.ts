@@ -262,7 +262,7 @@ Generate WORKING, COMPILABLE AL test code with this level of detail and specific
       messages: [
         {
           role: 'system',
-          content: 'You are an expert Business Central AL developer specializing in unit test generation. You MUST generate complete, working AL test code with actual implementations, not placeholder comments. Focus on creating production-ready test codeunits that would compile and run successfully in Business Central.'
+          content: 'You are an expert Business Central AL developer specializing in unit test generation. You MUST generate complete, working AL test code with actual implementations, not placeholder comments. Focus on creating production-ready test codeunits that would compile and run successfully in Business Central. Always return your response as JSON wrapped in markdown code blocks using the format: ```json\n{your json here}\n```'
         },
         {
           role: 'user',
@@ -271,7 +271,6 @@ Generate WORKING, COMPILABLE AL test code with this level of detail and specific
       ],
       max_tokens: Math.max(this.config.maxTokens, 8000), // Ensure sufficient tokens for detailed code
       temperature: 0.2, // Lower temperature for more consistent, deterministic code generation
-      response_format: { type: "json_object" } // Ensure JSON output
     });
 
     return response.choices[0]?.message?.content || '';
@@ -302,19 +301,41 @@ Generate WORKING, COMPILABLE AL test code with this level of detail and specific
   }
 
   private parseTestGenerationResponse(response: string, extensionName: string): TestGenerationResult[] {
+    this.logger.debug(`Attempting to parse response for ${extensionName}...`);
+    this.logger.debug(`Response preview: ${response.substring(0, 200)}...`);
+    
     try {
       // Extract JSON from the response
       const jsonMatch = response.match(/```json\n([\s\S]*?)\n```/);
       if (!jsonMatch) {
+        this.logger.warn('No JSON block found in response, looking for alternative formats...');
+        
+        // Try to find JSON without markdown wrapper
+        const bareJsonMatch = response.match(/\{[\s\S]*\}/);
+        if (bareJsonMatch) {
+          this.logger.debug('Found bare JSON, attempting to parse...');
+          const parsed = JSON.parse(bareJsonMatch[0]);
+          if (parsed.tests && Array.isArray(parsed.tests)) {
+            return parsed.tests.map((test: any) => ({
+              testCode: test.testCode || '',
+              fileName: test.fileName || `Test${extensionName}.al`,
+              description: test.description || 'Generated unit tests',
+              coverage: test.coverage || []
+            }));
+          }
+        }
+        
         throw new Error('No JSON found in response');
       }
 
+      this.logger.debug(`Extracted JSON: ${jsonMatch[1].substring(0, 100)}...`);
       const parsed = JSON.parse(jsonMatch[1]);
       
       if (!parsed.tests || !Array.isArray(parsed.tests)) {
         throw new Error('Invalid response format: missing tests array');
       }
 
+      this.logger.debug(`Successfully parsed ${parsed.tests.length} tests`);
       return parsed.tests.map((test: any) => ({
         testCode: test.testCode || '',
         fileName: test.fileName || `Test${extensionName}.al`,
@@ -323,10 +344,12 @@ Generate WORKING, COMPILABLE AL test code with this level of detail and specific
       }));
     } catch (error) {
       this.logger.warn(`Failed to parse JSON response, attempting fallback: ${error}`);
+      this.logger.debug(`Full response for debugging: ${response}`);
       
       // Fallback: extract code blocks
       const codeBlocks = response.match(/```al\n([\s\S]*?)\n```/g);
       if (codeBlocks && codeBlocks.length > 0) {
+        this.logger.debug(`Found ${codeBlocks.length} AL code blocks, using fallback parsing`);
         return [{
           testCode: codeBlocks[0].replace(/```al\n|\n```/g, ''),
           fileName: `Test${extensionName}.al`,
