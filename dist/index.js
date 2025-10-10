@@ -13,7 +13,7 @@ Object.defineProperty(exports, "GitHubAnalyzer", { enumerable: true, get: functi
 (0, dotenv_1.config)();
 const program = new commander_1.Command();
 program
-    .name('al-test-generator')
+    .name('unittest-agent')
     .description('AI-powered unit test generator for Business Central AL extensions')
     .version('1.0.0');
 program

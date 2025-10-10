@@ -56,7 +56,7 @@ This will install all dependencies listed in `package.json`:
 #### Option A: Use Local Action (for testing)
 ```yaml
 # Replace this line in workflow files:
-uses: your-username/al-test-generator@v1
+uses: kaanaras-edaf/unittest-agent@v1
 
 # With this:
 uses: ./  # Use local action

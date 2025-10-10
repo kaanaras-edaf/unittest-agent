@@ -62,12 +62,20 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
-        npm install --global al-test-generator
+        cd ${{ github.action_path }}
+        npm ci
+        
+    - name: Build action
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        npm run build
         
     - name: Generate AL Unit Tests 🧪
       shell: bash
       run: |
-        cmd_args="al-test-generator generate"
+        cd ${{ github.action_path }}
+        cmd_args="node dist/index.js generate"
         
         # Required inputs
         cmd_args="$cmd_args --model=${{ inputs.MODEL_STRING }}"

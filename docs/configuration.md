@@ -155,7 +155,7 @@ jobs:
         with:
           fetch-depth: 0
       
-      - uses: your-username/al-test-generator@v1
+      - uses: kaanaras-edaf/unittest-agent@v1
         with:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -173,7 +173,7 @@ jobs:
           - "openai:gpt-4"
           - "anthropic:claude-3-sonnet"
     steps:
-      - uses: your-username/al-test-generator@v1
+      - uses: kaanaras-edaf/unittest-agent@v1
         with:
           MODEL_STRING: ${{ matrix.model }}
           OUTPUT_PATH: "./tests/${{ matrix.model }}"
@@ -191,7 +191,7 @@ jobs:
 
 - name: Generate tests
   if: steps.changes.outputs.has_al_changes == 'true'
-  uses: your-username/al-test-generator@v1
+  uses: kaanaras-edaf/unittest-agent@v1
 ```
 
 ## Project Structure Requirements
@@ -276,10 +276,10 @@ For local development, add to `.vscode/settings.json`:
 
 ```json
 {
-  "al-test-generator.autoGenerate": true,
-  "al-test-generator.model": "openai:gpt-4",
-  "al-test-generator.outputPath": "./tests",
-  "al-test-generator.includeDocumentation": true
+  "unittest-agent.autoGenerate": true,
+  "unittest-agent.model": "openai:gpt-4",
+  "unittest-agent.outputPath": "./tests",
+  "unittest-agent.includeDocumentation": true
 }
 ```
 
@@ -289,7 +289,7 @@ For local development, add to `.vscode/settings.json`:
 
 ```yaml
 # Stagger API calls for large projects
-- uses: your-username/al-test-generator@v1
+- uses: kaanaras-edaf/unittest-agent@v1
   with:
     MAX_TOKENS: "2000"  # Smaller requests
     CHANGED_FILES_ONLY: "true"  # Reduce scope
@@ -301,7 +301,7 @@ For local development, add to `.vscode/settings.json`:
 - name: Cache AI responses
   uses: actions/cache@v4
   with:
-    path: ~/.cache/al-test-generator
+    path: ~/.cache/unittest-agent
     key: tests-${{ hashFiles('**/*.al') }}
 ```
 
@@ -312,7 +312,7 @@ strategy:
   matrix:
     module: [SalesAnalysis, InventoryTracker, CustomerEngagement]
 steps:
-  - uses: your-username/al-test-generator@v1
+  - uses: kaanaras-edaf/unittest-agent@v1
     with:
       CODE_PATH: "./${{ matrix.module }}/*.al"
       OUTPUT_PATH: "./tests/${{ matrix.module }}"
@@ -325,7 +325,7 @@ steps:
 Enable detailed logging:
 
 ```yaml
-- uses: your-username/al-test-generator@v1
+- uses: kaanaras-edaf/unittest-agent@v1
   with:
     DEBUG: "true"
 ```
@@ -336,10 +336,10 @@ Test your configuration locally:
 
 ```bash
 # Dry run
-al-test-generator analyze --debug
+unittest-agent analyze --debug
 
 # Validate patterns
-al-test-generator generate --dry-run --code-path "./**/*.al"
+unittest-agent generate --dry-run --code-path "./**/*.al"
 ```
 
 ### Common Issues
