@@ -1,6 +1,74 @@
-# UnitTest-Agent v1.0.0 Release Notes
+# UnitTest-Agent Release Notes
 
-## 🚀 UnitTest-Agent v1.0.0 - Initial Release
+## 🚀 v1.2.0 - Enhanced Test Generation Quality
+
+**Release Date**: January 2025
+
+### ✨ Major Improvements
+
+#### 🎯 Working Code Generation
+- **BREAKING THROUGH**: AI now generates **actual working AL test implementations** instead of placeholder comments
+- **Source Code Context**: Full AL source code is included in LLM prompts for better understanding
+- **Production-Ready**: Generated tests are compilable and follow AL best practices
+
+#### 🧠 Enhanced Prompt Engineering
+- **Detailed Requirements**: Comprehensive instructions for generating working test code
+- **Specific Examples**: Prompt includes real AL test examples showing expected quality
+- **Context-Aware**: Includes table structures, field definitions, and procedure signatures
+
+#### ⚙️ Technical Enhancements
+- **Increased Token Limits**: Minimum 8000 tokens for detailed code generation
+- **JSON Output Format**: Ensures structured, parseable responses
+- **Lower Temperature**: More consistent and deterministic code generation (0.2)
+- **Enhanced System Prompt**: Better instructions for production-ready test generation
+
+### 🔧 What Changed
+
+**Before v1.2.0**: Generated placeholder tests like:
+```al
+// Test calculation logic
+// Verify flowfield values
+// Assert expected results
+```
+
+**After v1.2.0**: Generates actual working tests like:
+```al
+LibraryAssert.AreEqual(ExpectedValue, ActualValue, 'Score calculation should match expected value');
+CustomerScore.TestField("Rating", CustomerScore.Rating::Gold);
+Customer.SetFilter("Customer Posting Group", 'DOMESTIC');
+```
+
+### 📦 Migration Guide
+
+Update your workflows to use the latest version:
+
+```yaml
+- uses: kaanaras-edaf/unittest-agent@v1.2.0  # Latest version
+# OR
+- uses: kaanaras-edaf/unittest-agent@v1      # Auto-updates to latest v1.x
+```
+
+---
+
+## 🔧 v1.1.0 - Stability & Fixes
+
+**Release Date**: January 2025
+
+### � Critical Fixes
+- **✅ Fixed npm 404 Error**: Resolved "Package 'al-test-generator' not found" error in GitHub Actions
+- **🏷️ Proper Versioning**: Clean tag structure for reliable action usage  
+- **🔧 Build Process**: Uses local repository code instead of non-existent npm package
+
+### 📦 Technical Changes
+- Changed action.yml to use local build process (`npm ci && npm run build`)
+- Updated all references from 'al-test-generator' to 'unittest-agent'
+- Streamlined GitHub Actions workflow structure
+
+---
+
+## 🚀 v1.0.0 - Initial Release
+
+**Release Date**: January 2025
 
 AI-powered unit test generator for Business Central AL extensions.
 

@@ -16,6 +16,21 @@ AI-powered unit test generator for Microsoft Dynamics 365 Business Central AL ex
 - **🔧 GitHub Actions Integration**: Seamlessly integrates into CI/CD pipelines
 - **🎯 Smart Analysis**: Analyzes project structure and dependencies automatically
 
+## 🆕 What's New in v1.2.0
+
+### Enhanced Test Generation Quality ✨
+- **Working Code Generation**: AI now generates actual working AL test implementations instead of placeholder comments
+- **Source Code Context**: Includes full AL source code in LLM prompts for better understanding
+- **Detailed Requirements**: Enhanced prompt engineering with specific examples and requirements
+- **Production-Ready Tests**: Generated tests are compilable and follow AL best practices
+
+### Recent Fixes (v1.1.0)
+- **✅ Fixed npm 404 Error**: Resolved dependency issues in GitHub Actions
+- **🏷️ Proper Versioning**: Clean tag structure for reliable action usage
+- **🔧 Build Process**: Streamlined compilation and deployment
+
+> **Migration Note**: Update your workflows to use `@v1.2.0` or `@v1` for the latest improvements
+
 ## 📋 Table of Contents
 
 - [Quick Start](#-quick-start)
@@ -51,7 +66,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Generate Unit Tests
-        uses: kaanaras-edaf/unittest-agent@v1.1.0  # Use v1.1.0 or later (fixes npm 404 error)
+        uses: kaanaras-edaf/unittest-agent@v1.2.0  # Latest version with enhanced test generation
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           docs-path: './*/md/*.md,./md/*.md'
