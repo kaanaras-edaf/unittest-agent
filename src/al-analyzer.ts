@@ -9,6 +9,7 @@ export interface ALExtension {
   events: ALEvent[];
   flowfields: ALFlowfield[];
   dependencies: string[];
+  sourceCode?: string; // Add source code for LLM context
 }
 
 export interface ALObject {
@@ -81,7 +82,8 @@ export class ALAnalyzer {
         objects: [],
         events: [],
         flowfields: [],
-        dependencies: []
+        dependencies: [],
+        sourceCode: content // Include source code for LLM analysis
       };
 
       // Parse AL objects

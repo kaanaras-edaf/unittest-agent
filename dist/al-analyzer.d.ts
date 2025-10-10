@@ -6,6 +6,7 @@ export interface ALExtension {
     events: ALEvent[];
     flowfields: ALFlowfield[];
     dependencies: string[];
+    sourceCode?: string;
 }
 export interface ALObject {
     type: string;

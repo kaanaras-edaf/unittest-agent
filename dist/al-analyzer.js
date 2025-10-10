@@ -21,7 +21,8 @@ class ALAnalyzer {
                 objects: [],
                 events: [],
                 flowfields: [],
-                dependencies: []
+                dependencies: [],
+                sourceCode: content // Include source code for LLM analysis
             };
             // Parse AL objects
             extension.objects = this.parseALObjects(content);

@@ -25,6 +25,7 @@ export declare class LLMClient {
     constructor(config: LLMConfig, logger: Logger);
     generateTests(context: TestGenerationContext): Promise<TestGenerationResult[]>;
     private buildTestGenerationPrompt;
+    private buildCodeAnalysisSection;
     private callOpenAI;
     private callAnthropic;
     private parseTestGenerationResponse;

@@ -71,82 +71,183 @@ export class LLMClient {
   }
 
   private buildTestGenerationPrompt(context: TestGenerationContext): string {
-    return `
-# AL Unit Test Generation Task
+    return `# AL Unit Test Generation Task
 
-You are an expert Business Central AL developer tasked with generating comprehensive unit tests for AL extensions.
+You are an expert Business Central AL developer tasked with generating COMPLETE, WORKING unit tests for AL extensions.
+
+## CRITICAL INSTRUCTIONS
+- Generate ACTUAL, EXECUTABLE test code, NOT comments or placeholders
+- Include real AL syntax, actual field names, and working test logic
+- Use specific data from the provided AL code analysis
+- Create tests that would actually compile and run in Business Central
+- Include proper setup, execution, and assertion logic
 
 ## Extension Information
 **Name**: ${context.extension.name}
 **File Path**: ${context.extension.filePath}
 
-## Objects in Extension
-${context.extension.objects.map(obj => `
-- **${obj.type}** ${obj.id} "${obj.name}"
-  - Fields: ${obj.fields?.length || 0}
-  - Procedures: ${obj.procedures?.length || 0}
-`).join('')}
+## ACTUAL AL CODE ANALYSIS
+${this.buildCodeAnalysisSection(context.extension)}
 
-## Events
-${context.extension.events.map(event => `
-- **${event.eventType}**: ${event.name} (${event.objectType}: ${event.objectName})
-`).join('')}
+## ACTUAL SOURCE CODE
+\`\`\`al
+${context.extension.sourceCode || 'Source code not available'}
+\`\`\`
 
-## Flowfields
-${context.extension.flowfields.map(ff => `
-- **${ff.name}** in ${ff.tableName}: ${ff.calcMethod} from ${ff.sourceTable || 'unknown'}.${ff.sourceField || 'unknown'}
-`).join('')}
-
-## Dependencies
-${context.extension.dependencies.join(', ')}
-
-## Documentation Context
+## DOCUMENTATION CONTEXT
 ${context.documentation}
 
-## Project Context
+## PROJECT CONTEXT  
 ${context.projectContext}
 
-## Test Requirements
+## REQUIRED TEST TYPES
 ${context.testRequirements.map(req => `- ${req}`).join('\n')}
 
-## Task
-Generate comprehensive AL unit tests that cover:
+## DETAILED TEST GENERATION REQUIREMENTS
 
-1. **Object Functionality**: Test main procedures and business logic
-2. **Flowfield Calculations**: Verify flowfield formulas and calculations
-3. **Event Integration**: Test event publishers and subscribers
-4. **Cross-Module Integration**: Test interactions with other modules
-5. **Error Handling**: Test validation and error scenarios
-6. **Edge Cases**: Test boundary conditions and unusual inputs
+### 1. Table Extension Tests
+For each table extension, generate tests that:
+- Create test records with actual field values
+- Validate field assignments and calculations
+- Test triggers (OnInsert, OnModify, OnDelete, OnValidate)
+- Test flowfield calculations with real formulas
 
-## Output Format
-Please provide your response in the following JSON format:
+### 2. Procedure Tests  
+For each procedure, generate tests that:
+- Call procedures with actual parameters
+- Validate return values and side effects
+- Test different parameter combinations
+- Include error handling scenarios
+
+### 3. Event Tests
+For event publishers/subscribers:
+- Trigger actual events with test data
+- Validate event parameter passing
+- Test integration between modules via events
+
+### 4. Integration Tests
+- Test cross-module functionality
+- Validate data flow between extensions
+- Test business logic workflows
+
+## AL TEST CODE REQUIREMENTS
+- Use [Test] attribute, NOT [TestMethod]
+- Include proper codeunit structure with Subtype = Test
+- Use actual table/field names from the analysis
+- Include realistic test data creation
+- Use proper Assert statements (Assert.IsTrue, Assert.AreEqual, etc.)
+- Include error scenarios with asserterror keyword
+- Follow AL naming conventions exactly
+
+## OUTPUT FORMAT
+Return ONLY valid JSON in this exact format:
 
 \`\`\`json
 {
   "tests": [
     {
-      "fileName": "Test[ExtensionName].al",
-      "description": "Brief description of what this test file covers",
-      "testCode": "// Complete AL test code here",
-      "coverage": ["List of features/functions tested"]
+      "fileName": "Test[ActualObjectName].al",
+      "description": "Specific description of tests for [ObjectName]", 
+      "testCode": "// COMPLETE AL TEST CODEUNIT CODE HERE - NO PLACEHOLDERS",
+      "coverage": ["Specific features tested"]
     }
   ]
 }
 \`\`\`
 
-## AL Test Guidelines
-- Use proper AL syntax for Business Central test framework
-- Include [Test] attribute for test procedures
-- Use proper naming conventions (Test[FunctionName])
-- Include setup and teardown procedures when needed
-- Use Assert functions for validation
-- Test both positive and negative scenarios
-- Include comments explaining test scenarios
-- Follow AL coding standards and best practices
+## EXAMPLE OF EXPECTED OUTPUT QUALITY
+Instead of generating placeholder comments like "// Test calculation logic", generate actual code like:
 
-Generate tests that are production-ready and follow Business Central testing best practices.
-`;
+\`\`\`al
+[Test]
+procedure TestCustomerEngagementScoreCalculation()
+var
+    Customer: Record Customer;
+    SalesHeader: Record "Sales Header";
+    Item: Record Item;
+begin
+    // Setup test data
+    Customer.Init();
+    Customer."No." := 'TEST001';
+    Customer.Name := 'Test Customer';
+    Customer.Insert();
+    
+    // Create sales data that affects engagement
+    SalesHeader.Init();
+    SalesHeader."No." := 'SALES001';
+    SalesHeader."Sell-to Customer No." := Customer."No.";
+    SalesHeader."Document Type" := SalesHeader."Document Type"::Order;
+    SalesHeader.Insert();
+    
+    // Trigger engagement calculation
+    Customer.CalcFields("Engagement Score");
+    
+    // Assert expected result
+    Assert.IsTrue(Customer."Engagement Score" >= 0, 'Engagement score should be calculated');
+end;
+\`\`\`
+
+Generate WORKING, COMPILABLE AL test code with this level of detail and specificity.`;
+  }
+
+  private buildCodeAnalysisSection(extension: ALExtension): string {
+    let analysis = '';
+    
+    // Add objects with their actual code structure
+    if (extension.objects.length > 0) {
+      analysis += '\n### Objects Found:\n';
+      extension.objects.forEach(obj => {
+        analysis += `\n**${obj.type} ${obj.id} "${obj.name}"**\n`;
+        
+        if (obj.fields && obj.fields.length > 0) {
+          analysis += 'Fields:\n';
+          obj.fields.forEach(field => {
+            analysis += `  - ${field.name}: ${field.type}`;
+            if (field.isFlowfield && field.calcFormula) {
+              analysis += ` (Flowfield: ${field.calcFormula})`;
+            }
+            analysis += '\n';
+          });
+        }
+        
+        if (obj.procedures && obj.procedures.length > 0) {
+          analysis += 'Procedures:\n';
+          obj.procedures.forEach(proc => {
+            analysis += `  - ${proc.name}(`;
+            analysis += proc.parameters.map(p => `${p.isVar ? 'var ' : ''}${p.name}: ${p.type}`).join(', ');
+            analysis += ')';
+            if (proc.returnType) analysis += ` : ${proc.returnType}`;
+            analysis += '\n';
+          });
+        }
+      });
+    }
+    
+    // Add events with context
+    if (extension.events.length > 0) {
+      analysis += '\n### Events:\n';
+      extension.events.forEach(event => {
+        analysis += `- ${event.eventType}: ${event.name}`;
+        if (event.objectType && event.objectName) {
+          analysis += ` (${event.objectType}: ${event.objectName})`;
+        }
+        analysis += '\n';
+      });
+    }
+    
+    // Add flowfields with formulas
+    if (extension.flowfields.length > 0) {
+      analysis += '\n### Flowfields:\n';
+      extension.flowfields.forEach(ff => {
+        analysis += `- ${ff.name} in ${ff.tableName}: ${ff.calcMethod}`;
+        if (ff.sourceTable && ff.sourceField) {
+          analysis += ` from ${ff.sourceTable}.${ff.sourceField}`;
+        }
+        analysis += '\n';
+      });
+    }
+    
+    return analysis || 'No detailed code analysis available.';
   }
 
   private async callOpenAI(prompt: string): Promise<string> {
@@ -161,15 +262,16 @@ Generate tests that are production-ready and follow Business Central testing bes
       messages: [
         {
           role: 'system',
-          content: 'You are an expert Business Central AL developer specializing in unit test generation. Generate high-quality, comprehensive unit tests for AL extensions.'
+          content: 'You are an expert Business Central AL developer specializing in unit test generation. You MUST generate complete, working AL test code with actual implementations, not placeholder comments. Focus on creating production-ready test codeunits that would compile and run successfully in Business Central.'
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      max_tokens: this.config.maxTokens,
-      temperature: 0.3, // Lower temperature for more consistent code generation
+      max_tokens: Math.max(this.config.maxTokens, 8000), // Ensure sufficient tokens for detailed code
+      temperature: 0.2, // Lower temperature for more consistent, deterministic code generation
+      response_format: { type: "json_object" } // Ensure JSON output
     });
 
     return response.choices[0]?.message?.content || '';
