@@ -40,7 +40,7 @@ jobs:
           
       - name: Generate Tests for Changed Files
         if: steps.changes.outputs.has_al_changes == 'true'
-        uses: kaanaras-edaf/unittest-agent@v1
+        uses: kaanaras-edaf/unittest-agent@v1.1.0  # Fixed version - resolves npm 404 error
         with:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

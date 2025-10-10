@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Generate Unit Tests
-        uses: kaanaras-edaf/unittest-agent@v1
+        uses: kaanaras-edaf/unittest-agent@v1.1.0  # Use v1.1.0 or later (fixes npm 404 error)
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           docs-path: './*/md/*.md,./md/*.md'
@@ -226,7 +226,8 @@ node dist/index.js --help
 
 | Issue | Solution |
 |-------|----------|
-| **"Action not found"** | Ensure you're using `kaanaras-edaf/unittest-agent@v1` |
+| **"npm 404 Not Found - al-test-generator"** | Use `@v1.1.0` or later: `kaanaras-edaf/unittest-agent@v1.1.0` |
+| **"Action not found"** | Ensure you're using `kaanaras-edaf/unittest-agent@v1.1.0` |
 | **"API key missing"** | Add `OPENAI_API_KEY` to repository secrets |
 | **"No AL files found"** | Check your `code-path` glob pattern matches your files |
 | **"No documentation found"** | Verify `docs-path` matches your documentation location |
